@@ -8,7 +8,7 @@ st.title("YouTube Video Downloader - Highest Resolution with yt-dlp")
 # Input: YouTube video URL
 video_url = st.text_input("Enter the YouTube video URL:")
 
-# Folder for temporary downloads on the server
+# Temporary folder for video downloads
 TEMP_FOLDER = "temp_videos"
 
 # Ensure the folder exists
@@ -62,6 +62,7 @@ if st.button("Download Video"):
             # Download video using yt-dlp
             video_title = download_video_with_ytdlp(video_url, TEMP_FOLDER, progress_bar, status_text)
             
+            # Get the video path
             video_path = os.path.join(TEMP_FOLDER, f"{video_title}.mp4")
             
             # Open the downloaded video for user download
@@ -74,9 +75,11 @@ if st.button("Download Video"):
                     mime="video/mp4"
                 )
             
-            # After download, delete the video file from the server
-            os.remove(video_path)
-            st.success(f"{video_title} has been downloaded and deleted from the server.")
+            # Inform the user the video is ready to download
+            st.success(f"{video_title} is ready for download.")
+
+            # Delayed deletion after the video is presented to the user
+            st.warning(f"The video will be deleted from the server after this session.")
 
         except Exception as e:
             st.error(f"Error: {e}")
