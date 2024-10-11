@@ -1,0 +1,6 @@
+stremlit
+yt_dlp
+os
+ffmpeg
+
+-e.
