@@ -1,15 +1,13 @@
 import streamlit as st
 import yt_dlp
 import os
+from tempfile import NamedTemporaryFile
 
 # Streamlit app title
 st.title("YouTube Video Downloader - Highest Resolution with yt-dlp")
 
 # Input: YouTube video URL
 video_url = st.text_input("Enter the YouTube video URL:")
-
-# Input: Folder path for saving the downloaded video
-folder_path = st.text_input("Enter the folder path where you want to save the video:", "Downloads/")
 
 # Function to handle yt-dlp progress and update the Streamlit progress bar
 def progress_hook(d, progress_bar, status_text):
@@ -25,44 +23,47 @@ def progress_hook(d, progress_bar, status_text):
     elif d['status'] == 'finished':
         status_text.text("Download Complete!")
 
-def download_video_with_ytdlp(url, folder, progress_bar, status_text):
-    # Ensure the folder exists, create if it doesn't
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
+def download_video_with_ytdlp(url, temp_file, progress_bar, status_text):
     # Define yt-dlp options to download the highest resolution video in a single format
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best',  # Download the best available format
-        'outtmpl': os.path.join(folder, '%(title)s.%(ext)s'),  # Save the video in the chosen folder
+        'outtmpl': temp_file.name,  # Save the video to the temp file
         'progress_hooks': [lambda d: progress_hook(d, progress_bar, status_text)],
         'noplaylist': True  # Prevent downloading playlists
     }
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Download the video and extract video info
-            info_dict = ydl.extract_info(url, download=False)
-            video_title = info_dict.get('title', 'downloaded_video')  # Default title if extraction fails
-            
-            # Start downloading
+            # Download the video
             ydl.download([url])
-        
-        return video_title
     except Exception as e:
         raise RuntimeError(f"An error occurred during the download: {e}")
 
 # Button to download video
 if st.button("Download Video"):
-    if video_url and folder_path:
+    if video_url:
         try:
             # Set up the progress bar and status text
             progress_bar = st.progress(0)
             status_text = st.empty()
 
-            # Download video using yt-dlp
-            video_title = download_video_with_ytdlp(video_url, folder_path, progress_bar, status_text)
-            st.success(f"Downloaded: {video_title}")
+            # Create a temporary file to store the video
+            with NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+                # Download video using yt-dlp
+                download_video_with_ytdlp(video_url, temp_file, progress_bar, status_text)
+                
+                # Read the video file to serve it to the user for download
+                with open(temp_file.name, "rb") as file:
+                    video_bytes = file.read()
+
+                # Provide download button to download the video to local machine
+                st.download_button(
+                    label="Download Video to Local Machine",
+                    data=video_bytes,
+                    file_name="downloaded_video.mp4",
+                    mime="video/mp4"
+                )
         except Exception as e:
             st.error(f"Error: {e}")
     else:
-        st.error("Please enter both a valid YouTube URL and a folder path.")
+        st.error("Please enter a valid YouTube URL.")
