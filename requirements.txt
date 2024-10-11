@@ -1,4 +1,2 @@
-stremlit
-yt_dlp
-os
-ffmpeg
+streamlit==1.25.0  # or the latest version you're using
+yt-dlp==2024.01.01  # replace with the latest version of yt-dlp
