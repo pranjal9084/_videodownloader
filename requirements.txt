@@ -1,2 +1,2 @@
-streamlit==1.25.0  # or the latest version you're using
-yt-dlp==2024.01.01  # replace with the latest version of yt-dlp
+streamlit==1.39.0
+yt-dlp==2024.10.7  
